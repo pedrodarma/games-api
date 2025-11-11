@@ -1,0 +1,66 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      REDIS_HOST: ${ { secrets.REDIS_HOST } }
+      REDIS_PORT: ${ { secrets.REDIS_PORT } }
+      REDIS_USERNAME: ${ { secrets.REDIS_USERNAME } }
+      REDIS_PASSWORD: ${ { secrets.REDIS_PASSWORD } }
+
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: '0'
+        #   persist-credentials: false
+
+      - name: Get the version
+        id: code-version
+        run: echo "API_VERSION=$(sh ./_scripts/get_version_local.sh)" >> $GITHUB_ENV
+
+      - name: Create a new tag
+        id: create-tag
+        run: |
+          echo "The new tag will be: ${{ env.API_VERSION }}"
+          git tag ${{ env.API_VERSION }}
+          git push origin ${{ env.API_VERSION }}
+
+      - name: Install
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20.x
+
+      - name: Build Project
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: |
+          REPO_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '[:upper:]' '[:lower:]') # Get the branch name in lowercase
+          docker build . -t ghcr.io/$REPO_LOWER:$BRANCH_NAME
+
+      - name: Push Docker image to GitHub Packages
+        run: |
+          REPO_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '[:upper:]' '[:lower:]') # Get the branch name in lowercase
+          docker push ghcr.io/$REPO_LOWER:$BRANCH_NAME
+          # Also push with the version tag
+          docker tag ghcr.io/$REPO_LOWER:$BRANCH_NAME ghcr.io/$REPO_LOWER:${{ env.API_VERSION }}
+          docker push ghcr.io/$REPO_LOWER:${{ env.API_VERSION }}
