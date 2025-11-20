@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import { AppConfig } from '@config';
+import Databases from '@databases';
+import { router } from '@routes';
+import cors from 'cors';
 import express from 'express';
 import { createServer } from 'http';
-import cors from 'cors';
-import { router } from '@routes';
-import Databases from '@databases';
 import { WebsocketClient } from './src/websocket/websocket';
 
 const app: express.Application = express();
@@ -20,7 +21,7 @@ app.set('trust proxy', true);
 
 app.use('/', router);
 
-const port = process.env.PORT || 8060;
+const port = AppConfig.server.port;
 server.listen(port, () => {
 	// eslint-disable-next-line no-console
 	console.warn(`Server listening on port ${port}`);

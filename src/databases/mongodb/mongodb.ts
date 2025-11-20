@@ -1,3 +1,4 @@
+import { AppConfig } from '@config';
 import { GameKeys, games } from '@constants/game_types';
 import { MongoClient } from 'mongodb';
 
@@ -12,9 +13,9 @@ export class MongoDB {
 
 	constructor(uri?: string) {
 		// Ex.: 'mongodb://username:password@host:port/databaseName';
-		const _uri = process.env.MONGODB || '';
+		const _uri = uri ?? AppConfig.database.mongodb.uri;
 
-		this._client = new MongoClient(uri ?? _uri);
+		this._client = new MongoClient(_uri);
 	}
 
 	public static initialize(): MongoDB {
