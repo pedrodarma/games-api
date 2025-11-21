@@ -1,3 +1,4 @@
+import { AppConfig } from '@config';
 import { MongoDB } from '@databases';
 import { LogQuickTacToe, WebSocketMessage } from '@models';
 import { LogsRepository } from '@repositories';
@@ -31,12 +32,10 @@ export class WebsocketClient {
 
 	private async _initialize(uri?: string) {
 		try {
-			const _uri = process.env.BROKER_URL || '';
+			const _uri = uri ?? AppConfig.websocket.brokerUrl;
 			if (!this._client) {
-				console.log(
-					`Connecting to WebSocket at ${uri ?? _uri}/${this._channel}`,
-				);
-				this._client = new WebSocket(`${uri ?? _uri}/${this._channel}`);
+				console.log(`Connecting to WebSocket at ${_uri}/${this._channel}`);
+				this._client = new WebSocket(`${_uri}/${this._channel}`);
 
 				if (this._client) {
 					// Register client after connection opens
