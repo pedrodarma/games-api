@@ -1,6 +1,7 @@
 import { AppConfig } from '@config';
 import { GameKeys, games } from '@constants/game_types';
-import { MongoClient } from 'mongodb';
+import { Errors } from '@errors';
+import { MongoClient, MongoClientOptions, MongoError } from 'mongodb';
 
 const _collectionsToEnsure = Object.values(games).map((game) => {
 	return `${game.id.toLowerCase()}_logs`;
@@ -10,52 +11,99 @@ export class MongoDB {
 	private static _instance: MongoDB;
 	private _client: MongoClient;
 	private _database: string = 'logs';
+	private _options: MongoClientOptions = {
+		maxPoolSize: 20,
+		wtimeoutMS: 2500,
+		retryReads: true,
+		retryWrites: true,
+	};
 
-	constructor(uri?: string) {
+	private constructor(uri?: string) {
 		// Ex.: 'mongodb://username:password@host:port/databaseName';
 		const _uri = uri ?? AppConfig.database.mongodb.uri;
 
-		this._client = new MongoClient(_uri);
+		this._client = new MongoClient(_uri, this._options);
 	}
 
-	public static initialize(): MongoDB {
+	public static initialize(uri?: string): MongoDB {
 		if (!MongoDB._instance) {
-			MongoDB._instance = new MongoDB();
+			MongoDB._instance = new MongoDB(uri);
+			MongoDB._instance._initialize();
 		}
-		MongoDB._instance._initialize();
 
 		return MongoDB._instance;
 	}
 
 	private async _initialize() {
 		try {
-			await this._client.connect();
+			await this._connectIfNeeded();
 
-			const admin = this._client.db().admin();
-			const dbs = await admin.listDatabases();
+			await this._createDatabaseIfNotExists();
 
-			const dbExists = dbs.databases.some((db) => db.name === this._database);
-			// console.log(
-			// 	dbExists
-			// 		? `DB ${this._database} already exists.`
-			// 		: `DB ${this._database} does not exist.`,
-			// );
-
-			const db = this._client.db(this._database);
-
-			const existingCollections = await db.listCollections().toArray();
-			const existingNames = existingCollections.map((c) => c.name);
-
-			for (const name of _collectionsToEnsure) {
-				if (!existingNames.includes(name)) {
-					await db.createCollection(name);
-					console.log(`✅ Collection '${name}' created.`);
-				} else {
-					// console.log(`ℹ️ Collection '${name}' already exists.`);
-				}
-			}
-		} catch (error) {
+			await this._createCollectionIfNotExists();
+		} catch {
 			//
+		}
+	}
+
+	private async _isConnected(): Promise<boolean> {
+		try {
+			await this._client.db().admin().ping();
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	private async _connect() {
+		await this._client.connect();
+	}
+
+	private async _disconnect() {
+		await this._client.close();
+	}
+
+	private async _connectIfNeeded() {
+		const connected = await this._isConnected();
+		this._client.addListener;
+		if (!connected) {
+			await this._connect();
+		}
+	}
+
+	private async _createDatabaseIfNotExists() {
+		const admin = this._client.db().admin();
+		const dbs = await admin.listDatabases();
+
+		const dbExists = dbs.databases.some((db) => db.name === this._database);
+		if (!dbExists) {
+			// eslint-disable-next-line no-console
+			console.log(`Creating database: ${this._database}`);
+			// Create the database by creating a collection
+			const db = this._client.db(this._database);
+			await db.createCollection('init_collection');
+			await db.collection('init_collection').drop();
+			// eslint-disable-next-line no-console
+			console.log(`Database ${this._database} created.`);
+		} else {
+			// console.log(`Database ${this._database} already exists.`);
+		}
+	}
+
+	private async _createCollectionIfNotExists() {
+		const db = this._client.db(this._database);
+
+		const existingCollections = await db.listCollections().toArray();
+		const existingNames = existingCollections.map((c) => c.name);
+
+		for (const name of _collectionsToEnsure) {
+			if (!existingNames.includes(name)) {
+				await db.createCollection(name);
+				// eslint-disable-next-line no-console
+				console.log(`✅ Collection '${name}' created.`);
+			} else {
+				// console.log(`ℹ️ Collection '${name}' already exists.`);
+			}
 		}
 	}
 
@@ -71,9 +119,12 @@ export class MongoDB {
 			if (result && result.insertedId) {
 				return true;
 			}
-		} catch {
-			console.log('Error inserting log into MongoDB');
-			//
+		} catch (error) {
+			const _err =
+				error instanceof MongoError || error instanceof Error
+					? error
+					: new Error(error as any);
+			throw Errors.database(_err);
 		}
 		return false;
 	}
@@ -88,13 +139,15 @@ export class MongoDB {
 			if (result) {
 				return result;
 			}
-		} catch {
-			console.log('Error fetching logs from MongoDB');
+		} catch (error) {
+			const _err =
+				error instanceof MongoError || error instanceof Error
+					? error
+					: new Error(error as any);
+			throw Errors.database(_err);
 		}
 		return [];
 	}
-
-	// static async disconnect() {}
 }
 
 interface Props {

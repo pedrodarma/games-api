@@ -6,10 +6,8 @@ services:
     container_name: games-api
     environment:
       - NODE_ENV=production
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-1118}
-      - REDIS_USERNAME=${REDIS_USERNAME:-admin}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-default}
+      - MONGODB=${MONGODB:-mongodb://username:password@host:port}
+      - BROKER_URL=${BROKER_URL:-ws://localhost:8070}
     restart: unless-stopped # options: always, unless-stopped, on-failure
     ports:
       - '8060:8060' # Expose port 8060 on the host
