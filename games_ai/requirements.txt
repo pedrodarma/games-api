@@ -1,4 +1,0 @@
-mlx
-pymongo
-numpy
-pandas
