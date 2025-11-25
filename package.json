@@ -11,7 +11,7 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"lint": "eslint . --ext .js,.ts --max-warnings=10",
 		"lint:fix": "eslint --fix . --ext .js,.ts --max-warnings=10",
-		"typecheck": "NODE_ENV=test EXPO_PUBLIC_DEFAULT_ENV=test tsc --strict"
+		"typecheck": "NODE_ENV=test tsc --strict"
 	},
 	"author": "Pedro Darma",
 	"homepage": "https://github.com/pedrodarma/games-api#readme",

@@ -1,5 +1,6 @@
 import { AppConfig } from '@config';
 import { MongoDB } from '@databases';
+import { Errors } from '@errors';
 import { LogQuickTacToe, WebSocketMessage } from '@models';
 import { LogsRepository } from '@repositories';
 import WebSocket from 'ws';
@@ -16,8 +17,8 @@ export class WebsocketClient {
 	public static initialize(uri?: string): WebsocketClient {
 		if (!WebsocketClient._instance) {
 			WebsocketClient._instance = new WebsocketClient();
+			WebsocketClient._instance._initialize(uri);
 		}
-		WebsocketClient._instance._initialize(uri);
 
 		return WebsocketClient._instance;
 	}
@@ -34,6 +35,7 @@ export class WebsocketClient {
 		try {
 			const _uri = uri ?? AppConfig.websocket.brokerUrl;
 			if (!this._client) {
+				// eslint-disable-next-line no-console
 				console.log(`Connecting to WebSocket at ${_uri}/${this._channel}`);
 				this._client = new WebSocket(`${_uri}/${this._channel}`);
 
@@ -46,12 +48,13 @@ export class WebsocketClient {
 				}
 			}
 		} catch (error) {
-			//
+			const _err = error instanceof Error ? error : new Error(error as any);
+			Errors.websocket(_err);
 		}
 	}
 }
 
-function _onOpen(ev: WebSocket.Event) {
+function _onOpen(_: WebSocket.Event) {
 	// eslint-disable-next-line no-console
 	// console.log('WebSocket connection opened:', ev);
 }
@@ -70,8 +73,6 @@ function _onMessage(this: WebSocket, event: WebSocket.MessageEvent) {
 		return;
 	}
 
-	// const message = JSON.parse(event.data) as WebSocketMessage;
-
 	if (message.type === 'event' && message.data.event === 'new_server') {
 		// eslint-disable-next-line no-console
 		console.log('WebSocket registered message:', message);
@@ -83,25 +84,25 @@ function _onMessage(this: WebSocket, event: WebSocket.MessageEvent) {
 		console.log('WebSocket log message:', message);
 
 		const data = message.data as LogQuickTacToe;
-		const repository = new LogsRepository(new MongoDB());
+		const repository = new LogsRepository(MongoDB.initialize());
 		repository.addLog(data.gameKey, data);
 
 		return;
 	}
 }
 
-function _onClose(ev: WebSocket.Event) {
+function _onClose(_: WebSocket.Event) {
 	// eslint-disable-next-line no-console
-	console.log('WebSocket connection closed:', ev);
+	// console.log('WebSocket connection closed:', ev);
 
 	setTimeout(() => {
 		WebsocketClient.reconnect();
 	}, 5000);
 }
 
-function _onError(ev: WebSocket.Event) {
+function _onError(_: WebSocket.Event) {
 	// eslint-disable-next-line no-console
-	console.error('WebSocket error occurred:', ev);
+	// console.error('WebSocket error occurred:', ev);
 
 	setTimeout(() => {
 		WebsocketClient.reconnect();

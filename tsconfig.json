@@ -10,18 +10,39 @@
 		] /* Specify a set of bundled library declaration files that describe the target runtime environment. */,
 		"declaration": true, // Generate d.ts files
 		"paths": {
-			"@constants": ["./src/_constants"],
-			"@constants/game_types": ["./src/_constants/_games"],
-			"@databases": ["./src/databases"],
-			"@controllers": ["./src/controllers"],
-			"@models": ["./src/models"],
-			"@repositories": ["./src/repositories"],
-			"@routes": ["./src/routes.ts"],
+			"@constants": [
+				"./src/_constants"
+			],
+			"@constants/game_types": [
+				"./src/_constants/_games"
+			],
+			"@databases": [
+				"./src/databases"
+			],
+			"@controllers": [
+				"./src/controllers"
+			],
+			"@models": [
+				"./src/models"
+			],
+			"@repositories": [
+				"./src/repositories"
+			],
+			"@routes": [
+				"./src/routes.ts"
+			],
+			"@errors": [
+				"./src/errors"
+			],
 			// "@services": [
 			//   "./src/services"
 			// ],
-			"@utils": ["./src/utils"],
-			"@config": ["./src/_config"]
+			"@utils": [
+				"./src/utils"
+			],
+			"@config": [
+				"./src/_config"
+			]
 			// "@middlewares": ["./src/middlewares"],
 			// "@interfaces": ["./src/interfaces"],
 			// "@types": ["./src/types"],
@@ -96,7 +117,11 @@
 		// "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */
 	},
-	"exclude": ["_website/*", "dist/*", "website/*"],
+	"exclude": [
+		"_website/*",
+		"dist/*",
+		"website/*"
+	],
 	"ts-node": {
 		"experimentalSpecifierResolution": "node",
 		"transpileOnly": true,

@@ -67,6 +67,7 @@ function getOptionalNumberEnv(key: string, defaultValue: number): number {
 	}
 	const parsed = parseInt(value, 10);
 	if (isNaN(parsed)) {
+		// eslint-disable-next-line no-console
 		console.warn(
 			`Warning: ${key} is not a valid number. Using default value: ${defaultValue}`,
 		);

@@ -1,6 +1,7 @@
 import { IDUtils } from './id.utils';
 
 export * from './id.utils';
+export * from './delay.utils';
 
 export const Utils = {
 	/**
