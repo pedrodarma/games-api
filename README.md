@@ -44,7 +44,7 @@ The API currently supports the following games:
 
 ## Tech Stack
 
-- **Runtime**: Node.js 20.x
+- **Runtime**: Node.js 22.x
 - **Language**: TypeScript
 - **Framework**: Express.js
 - **Database**: MongoDB
@@ -55,7 +55,7 @@ The API currently supports the following games:
 
 ## Prerequisites
 
-- Node.js 20.x
+- Node.js 22.x
 - Yarn package manager
 - MongoDB instance (local or remote)
 - (Optional) Redis instance for caching
