@@ -123,8 +123,19 @@ export class WebsocketClient {
 	}
 }
 
+/**
+ * Decodes a `ws` payload as UTF-8, handling every `WebSocket.Data` variant
+ * (string, Buffer, Buffer[] and ArrayBuffer).
+ */
+function _decode(data: WebSocket.Data): string {
+	if (typeof data === 'string') return data;
+	if (Buffer.isBuffer(data)) return data.toString('utf8');
+	if (Array.isArray(data)) return Buffer.concat(data).toString('utf8');
+	return Buffer.from(data).toString('utf8');
+}
+
 function _onMessage(socket: WebSocket, event: WebSocket.MessageEvent) {
-	const raw = Buffer.from(event.data.toString()).toString('ascii');
+	const raw = _decode(event.data);
 
 	if (raw === 'ping') {
 		socket.send(JSON.stringify({ type: 'pong' }));
